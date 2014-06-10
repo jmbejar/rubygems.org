@@ -137,25 +137,10 @@ class Rubygem < ActiveRecord::Base
     {
       'name'              => name,
       'downloads'         => downloads,
-      'version'           => version.number,
-      'version_downloads' => version.downloads_count,
-      'platform'          => version.platform,
-      'authors'           => version.authors,
-      'info'              => version.info,
-      'licenses'          => version.licenses,
       'project_uri'       => "http://#{host_with_port}/gems/#{name}",
       'gem_uri'           => "http://#{host_with_port}/gems/#{version.full_name}.gem",
-      'homepage_uri'      => linkset.try(:home),
-      'wiki_uri'          => linkset.try(:wiki),
-      'documentation_uri' => linkset.try(:docs),
-      'mailing_list_uri'  => linkset.try(:mail),
-      'source_code_uri'   => linkset.try(:code),
-      'bug_tracker_uri'   => linkset.try(:bugs),
-      'dependencies'      => {
-        'development' => version.dependencies.development.to_a,
-        'runtime'     => version.dependencies.runtime.to_a
-      }
-    }
+    }.merge(payload_from_version(version)).
+      merge(payload_from_linkset)
   end
 
   def as_json(options={})
@@ -269,6 +254,32 @@ class Rubygem < ActiveRecord::Base
   end
 
   private
+
+  def payload_from_version(version)
+    {
+      'version'           => version.number,
+      'version_downloads' => version.downloads_count,
+      'platform'          => version.platform,
+      'authors'           => version.authors,
+      'info'              => version.info,
+      'licenses'          => version.licenses,
+      'dependencies'      => {
+        'development' => version.dependencies.development.to_a,
+        'runtime'     => version.dependencies.runtime.to_a
+      }
+    }
+  end
+
+  def payload_from_linkset
+    {
+      'homepage_uri'      => linkset.try(:home),
+      'wiki_uri'          => linkset.try(:wiki),
+      'documentation_uri' => linkset.try(:docs),
+      'mailing_list_uri'  => linkset.try(:mail),
+      'source_code_uri'   => linkset.try(:code),
+      'bug_tracker_uri'   => linkset.try(:bugs),
+    }
+  end
 
   def ensure_name_format
     if name.class != String
